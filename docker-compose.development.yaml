@@ -1,0 +1,26 @@
+services:
+
+  caddy:
+    container_name: caddy
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.dev:/etc/caddy/Caddyfile
+    depends_on:
+      - webapp
+
+  webapp:
+    container_name: webapp
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    volumes:
+      - .:/app
+      - /app/.next
+      - /app/node_modules
+    # ports:
+    #   - "3000:3000"
+    env_file:
+      - .env.development
