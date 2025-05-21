@@ -88,7 +88,7 @@ deploy-webapp: check-prod-dependencies
 	@echo "🔁 Rebuilding and restarting only the webapp service..."
 	docker compose -f $(COMPOSE_PROD) build webapp --build-arg API_BASE_URL=$(API_BASE_URL)
 	@echo "🧹 Cleaning up old Docker images..."
-	docker image prune -f
+	docker image prune -f --filter "until=24h"
 	docker compose -f $(COMPOSE_PROD) up -d webapp
 	@echo "✅ Webapp service rebuilt and restarted successfully."
 
