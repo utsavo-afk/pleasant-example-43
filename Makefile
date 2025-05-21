@@ -11,18 +11,18 @@ COMPOSE_PROD=docker-compose.production.yaml
 dev-up:
 	@echo "Starting development environment..."
 	@echo "Building development images..."
-	docker-compose -f $(COMPOSE_DEV) up --build
+	docker compose -f $(COMPOSE_DEV) up --build
 	@echo "Development environment started successfully."
 
 dev-down:
 	@echo "Stopping development environment..."
-	docker-compose -f $(COMPOSE_DEV) down
+	docker compose -f $(COMPOSE_DEV) down
 	@echo "Development environment stopped successfully."
 	@echo "To clean up all containers and volumes, run 'make clean'."
 
 dev-build:
 	@echo "Building development images..."
-	docker-compose -f $(COMPOSE_DEV) build
+	docker compose -f $(COMPOSE_DEV) build
 	@echo "Development images built successfully."
 	@echo "To start the development environment, run 'make dev-up'."
 
@@ -30,13 +30,13 @@ dev-logs:
 	@echo "Viewing development logs..."
 	@echo "To stop the logs, press Ctrl+C."
 	@echo "To open a shell in the web container, run 'make dev-shell'."
-	docker-compose -f $(COMPOSE_DEV) logs -f
+	docker compose -f $(COMPOSE_DEV) logs -f
 
 
 dev-shell:
 	@echo "Opening shell in development web container..."
 	@echo "To stop the shell, type 'exit'."
-	docker-compose -f $(COMPOSE_DEV) exec web sh
+	docker compose -f $(COMPOSE_DEV) exec web sh
 	
 
 ## ---------- Production ---------- ##
@@ -44,19 +44,19 @@ dev-shell:
 prod-up:
 	@echo "Starting production environment..."
 	@echo "Building production images..."
-	docker-compose -f $(COMPOSE_PROD) up --build -d
+	docker compose -f $(COMPOSE_PROD) up --build -d
 	@echo "Production environment started successfully."
 	@echo "To view logs, run 'make prod-logs'."
 	@echo "To open a shell in the web container, run 'make prod-shell'."
 
 prod-down:
 	@echo "Stopping production environment..."
-	docker-compose -f $(COMPOSE_PROD) down
+	docker compose -f $(COMPOSE_PROD) down
 	@echo "Production environment stopped successfully."
 
 prod-build:
 	@echo "Building production images..."
-	docker-compose -f $(COMPOSE_PROD) build --no-cache
+	docker compose -f $(COMPOSE_PROD) build --no-cache
 	@echo "Production images built successfully."
 	@echo "To start the production environment, run 'make prod-up'."
 
@@ -64,14 +64,14 @@ prod-logs:
 	@echo "Viewing production logs..."
 	@echo "To stop the logs, press Ctrl+C."
 	@echo "To open a shell in the web container, run 'make prod-shell'."
-	docker-compose -f $(COMPOSE_PROD) logs -f
+	docker compose -f $(COMPOSE_PROD) logs -f
 
 
 prod-shell:
 	@echo "Opening shell in production web container..."
 	@echo "To stop the shell, type 'exit'."
 	@echo "To view logs, run 'make prod-logs'."
-	docker-compose -f $(COMPOSE_PROD) exec web sh
+	docker compose -f $(COMPOSE_PROD) exec web sh
 
 
 ## ---------- Utility ---------- ##
@@ -81,8 +81,8 @@ ps:
 
 clean:
 	@echo "Cleaning up all containers and volumes..."
-	docker-compose -f $(COMPOSE_DEV) down -v --remove-orphans
-	docker-compose -f $(COMPOSE_PROD) down -v --remove-orphans
+	docker compose -f $(COMPOSE_DEV) down -v --remove-orphans
+	docker compose -f $(COMPOSE_PROD) down -v --remove-orphans
 	docker system prune -f
 
 
