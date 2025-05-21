@@ -17,7 +17,7 @@ services:
       context: .
       dockerfile: Dockerfile.dev
       args:
-        API_BASE_URL: ${API_BASE_URL}
+        API_BASE_URL: ${API_BASE_URL:-http://caddy:80/api}
     volumes:
       - .:/app
       - /app/.next

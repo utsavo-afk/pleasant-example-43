@@ -17,6 +17,6 @@ services:
       context: .
       dockerfile: Dockerfile.prod
       args:
-        API_BASE_URL: ${API_BASE_URL}
+        API_BASE_URL: ${API_BASE_URL:-http://caddy:80/api}
     env_file:
       - .env.production

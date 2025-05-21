@@ -1,5 +1,6 @@
 .PHONY: dev-up dev-down dev-build dev-logs dev-shell \
 		prod-up prod-down prod-build prod-logs prod-shell \
+		deploy-webapp \
 		ps clean help
 
 # Configurable variables
@@ -50,13 +51,15 @@ prod-up:
 	@echo "To view logs, run 'make prod-logs'."
 	@echo "To open a shell in the web container, run 'make prod-shell'."
 
+# WARNING! You will most likely not need to run this in your prod env
 prod-down:
 	@echo "Stopping production environment..."
 	docker compose -f $(COMPOSE_PROD) down
 	@echo "Production environment stopped successfully."
 
+# WARNING! You will most likely not need to run this in your prod env
 prod-build:
-	@echo "Building production images..."
+	@echo "Building production images (no cache)..."
 	@echo "Using API_BASE_URL=$(API_BASE_URL)"
 	docker compose -f $(COMPOSE_PROD) build --no-cache --build-arg API_BASE_URL=$(API_BASE_URL)
 	@echo "Production images built successfully."
@@ -74,11 +77,32 @@ prod-shell:
 	@echo "To view logs, run 'make prod-logs'."
 	docker compose -f $(COMPOSE_PROD) exec web sh
 
+# ✅ CI/CD-safe deployment: rebuild only webapp and restart it
+deploy-webapp: check-prod-dependencies
+	@echo "🔁 Rebuilding and restarting only the webapp service..."
+	docker compose -f $(COMPOSE_PROD) build webapp --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_PROD) up -d webapp
+	@echo "✅ Webapp service updated successfully. Other services were left untouched."
+
 ## ---------- Utility ---------- ##
+
+# Internal utility to ensure all required services are running before deploying webapp
+check-prod-dependencies:
+	@echo "🔍 Checking if required services are up (db, caddy)..."
+	# @if ! docker compose -f $(COMPOSE_PROD) ps db | grep -q "Up"; then \
+	# 	echo "❌ ERROR: 'db' service is not running. Start it before deploying."; \
+	# 	exit 1; \
+	# fi
+	@if ! docker compose -f $(COMPOSE_PROD) ps caddy | grep -q "Up"; then \
+		echo "❌ ERROR: 'caddy' service is not running. Start it before deploying."; \
+		exit 1; \
+	fi
+	@echo "✅ All required services are running."
 
 ps:
 	docker ps
 
+# WARNING! You will most likely not need to run this in your prod env
 clean:
 	@echo "Cleaning up all containers and volumes..."
 	docker compose -f $(COMPOSE_DEV) down -v --remove-orphans
@@ -87,16 +111,17 @@ clean:
 
 help:
 	@echo "Makefile commands:"
-	@echo "  dev-up       - Start development environment"
-	@echo "  dev-down     - Stop development environment"
-	@echo "  dev-build    - Build development images"
-	@echo "  dev-logs     - View development logs"
-	@echo "  dev-shell    - Open shell in development container"
-	@echo "  prod-up      - Start production environment"
-	@echo "  prod-down    - Stop production environment"
-	@echo "  prod-build   - Build production images"
-	@echo "  prod-logs    - View production logs"
-	@echo "  prod-shell   - Open shell in production container"
-	@echo "  ps           - List running containers"
-	@echo "  clean        - Clean up all containers and volumes"
-	@echo "  help         - Show this help message"
+	@echo "  dev-up         - Start development environment"
+	@echo "  dev-down       - Stop development environment"
+	@echo "  dev-build      - Build development images"
+	@echo "  dev-logs       - View development logs"
+	@echo "  dev-shell      - Open shell in development container"
+	@echo "  prod-up        - Start entire production environment (⚠ use rarely)"
+	@echo "  prod-down      - Stop entire production environment (⚠ dangerous in prod)"
+	@echo "  prod-build     - Rebuild entire production image (⚠ rarely needed in prod)"
+	@echo "  prod-logs      - View production logs"
+	@echo "  prod-shell     - Open shell in production container"
+	@echo "  deploy-webapp  - 🔁 Rebuild + restart just the webapp service (safe for prod CI/CD)"
+	@echo "  ps             - List running containers"
+	@echo "  clean          - Dangerously clean everything (⚠ use with care)"
+	@echo "  help           - Show this help message"

@@ -1,5 +1,5 @@
 export default async function Home() {
-  const res = await fetch(process.env.API_BASE_URL + "/hello", {
+  const res = await fetch("https://jsonplaceholder.typicode.com/posts/1", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
