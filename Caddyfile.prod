@@ -1,4 +1,12 @@
 :80 {
+    redir https://me.webio.run{uri}
+}
+
+webio.run, www.webio.run {
+    redir https://me.webio.run{uri}
+}
+
+me.webio.run {
     reverse_proxy webapp:3000
 
     log {
