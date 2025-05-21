@@ -11,6 +11,6 @@ me.webio.run {
 
     log {
         output stdout
-        format console
+        format json
     }
 }
