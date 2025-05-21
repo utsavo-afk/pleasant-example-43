@@ -1,7 +1,8 @@
 .PHONY: dev-up dev-down dev-build dev-logs dev-shell \
 		prod-up prod-down prod-build prod-logs prod-shell \
 		deploy-webapp \
-		ps clean help
+		restart-gateway restart-prod-services \
+		ps clean help remind-me
 
 # Configurable variables
 COMPOSE_DEV=docker-compose.development.yaml
@@ -89,6 +90,11 @@ deploy-webapp: check-prod-dependencies
 	docker compose -f $(COMPOSE_PROD) up -d webapp
 	@echo "✅ Webapp service updated successfully. Other services were left untouched."
 
+restart-prod-services:
+	@echo "♻️ Restarting all production services without removing containers..."
+	docker compose -f $(COMPOSE_PROD) restart
+	@echo "✅ All production services restarted."
+
 ## ---------- Utility ---------- ##
 
 # Internal utility to ensure all required services are running before deploying webapp
@@ -116,18 +122,48 @@ clean:
 
 help:
 	@echo "Makefile commands:"
-	@echo "  dev-up          - Start development environment"
-	@echo "  dev-down        - Stop development environment"
-	@echo "  dev-build       - Build development images"
-	@echo "  dev-logs        - View development logs"
-	@echo "  dev-shell       - Open shell in development container"
-	@echo "  prod-up         - Start entire production environment (⚠ use rarely)"
-	@echo "  prod-down       - Stop entire production environment (⚠ dangerous in prod)"
-	@echo "  prod-build      - Rebuild entire production image (⚠ rarely needed in prod)"
-	@echo "  prod-logs       - View production logs"
-	@echo "  prod-shell      - Open shell in production container"
-	@echo "  restart-gateway - 🔁 Restart just the Caddy gateway (safe for prod CI/CD)"
-	@echo "  deploy-webapp   - 🔁 Rebuild + restart just the webapp service (safe for prod CI/CD)"
-	@echo "  ps              - List running containers"
-	@echo "  clean           - Dangerously clean everything (⚠ use with care)"
-	@echo "  help            - Show this help message"
+	@echo "  dev-up                - Start development environment"
+	@echo "  dev-down              - Stop development environment"
+	@echo "  dev-build             - Build development images"
+	@echo "  dev-logs              - View development logs"
+	@echo "  dev-shell             - Open shell in development container"
+	@echo "  prod-up               - Start entire production environment (⚠️ use rarely)"
+	@echo "  prod-down             - Stop entire production environment (⚠️ dangerous in prod)"
+	@echo "  prod-build            - Rebuild entire production image (⚠️ rarely needed in prod)"
+	@echo "  prod-logs             - View production logs"
+	@echo "  prod-shell            - Open shell in production container"
+	@echo "  restart-gateway       - 🔁 Restart just the Caddy gateway (safe for prod CI/CD)"
+	@echo "  deploy-webapp         - 🔁 Rebuild + restart just the webapp service (safe for prod CI/CD)"
+	@echo "  restart-prod-services - ♻️ Restart all production services without removing containers"
+	@echo "  ps                    - List running containers"
+	@echo "  clean                 - Dangerously clean everything (🧨 use with care)"
+	@echo "  help                  - Show this help message"
+
+remind-me:
+	@echo ""
+	@echo "🧠 REMINDER: When to use each Make command"
+	@echo ""
+	@echo "# === DEV ==="
+	@echo "  dev-up         - Start dev env (UI + API)"
+	@echo "  dev-down       - Stop dev env"
+	@echo "  dev-build      - Build dev images after changes"
+	@echo "  dev-logs       - View live dev logs"
+	@echo "  dev-shell      - Shell into dev webapp"
+	@echo ""
+	@echo "# === PROD ⚠️ Use with care ==="
+	@echo "  prod-up        - [⚠️ RARE] Start full prod stack"
+	@echo "  prod-down      - [🛑 DANGEROUS] Stop all prod containers"
+	@echo "  prod-build     - [⚠️ RARE] Force full rebuild"
+	@echo "  prod-logs      - View prod logs"
+	@echo "  prod-shell     - Shell into prod webapp"
+	@echo ""
+	@echo "# === CI/CD SAFE ✅ ==="
+	@echo "  deploy-webapp  - Rebuild + restart webapp only"
+	@echo "  restart-gateway- Restart only Caddy"
+	@echo "  restart-prod-services - Restart all prod services (no rebuild)"
+	@echo ""
+	@echo "# === UTILITIES ==="
+	@echo "  ps             - List running containers"
+	@echo "  clean          - [🧨 DANGEROUS] Full teardown of dev/prod"
+	@echo "  help           - Show full command descriptions"
+	@echo ""
