@@ -38,7 +38,7 @@ dev-logs:
 dev-shell:
 	@echo "Opening shell in development web container..."
 	@echo "To stop the shell, type 'exit'."
-	docker compose -f $(COMPOSE_DEV) exec web sh
+	docker compose -f $(COMPOSE_DEV) exec webapp sh
 
 ## ---------- Production ---------- ##
 
@@ -75,7 +75,7 @@ prod-shell:
 	@echo "Opening shell in production web container..."
 	@echo "To stop the shell, type 'exit'."
 	@echo "To view logs, run 'make prod-logs'."
-	docker compose -f $(COMPOSE_PROD) exec web sh
+	docker compose -f $(COMPOSE_PROD) exec webapp sh
 
 # ✅ CI/CD-safe deployment: rebuild only webapp and restart it
 deploy-webapp: check-prod-dependencies
