@@ -1,8 +1,4 @@
-:80 {
-    redir https://me.webio.run{uri}
-}
-
-webio.run, www.webio.run {
+webio.run, www.webio.run, me.webio.run {
     redir https://me.webio.run{uri}
 }
 
