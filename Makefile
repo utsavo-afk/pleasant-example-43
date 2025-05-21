@@ -87,8 +87,10 @@ restart-gateway:
 deploy-webapp: check-prod-dependencies
 	@echo "🔁 Rebuilding and restarting only the webapp service..."
 	docker compose -f $(COMPOSE_PROD) build webapp --build-arg API_BASE_URL=$(API_BASE_URL)
+	@echo "🧹 Cleaning up old Docker images..."
+	docker image prune -f
 	docker compose -f $(COMPOSE_PROD) up -d webapp
-	@echo "✅ Webapp service updated successfully. Other services were left untouched."
+	@echo "✅ Webapp service rebuilt and restarted successfully."
 
 restart-prod-services:
 	@echo "♻️ Restarting all production services without removing containers..."
