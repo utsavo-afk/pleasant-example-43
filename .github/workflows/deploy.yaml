@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main # Trigger on PR merge to main
+      - main # Trigger on PR merge to main YES
 
 jobs:
   deploy:
