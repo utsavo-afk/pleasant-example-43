@@ -77,6 +77,11 @@ prod-shell:
 	@echo "To view logs, run 'make prod-logs'."
 	docker compose -f $(COMPOSE_PROD) exec webapp sh
 
+restart-gateway:
+	@echo "🔁 Restarting Caddy gateway..."
+	docker compose -f $(COMPOSE_PROD) restart caddy
+	@echo "✅ Gateway restarted successfully."
+
 # ✅ CI/CD-safe deployment: rebuild only webapp and restart it
 deploy-webapp: check-prod-dependencies
 	@echo "🔁 Rebuilding and restarting only the webapp service..."
@@ -111,17 +116,18 @@ clean:
 
 help:
 	@echo "Makefile commands:"
-	@echo "  dev-up         - Start development environment"
-	@echo "  dev-down       - Stop development environment"
-	@echo "  dev-build      - Build development images"
-	@echo "  dev-logs       - View development logs"
-	@echo "  dev-shell      - Open shell in development container"
-	@echo "  prod-up        - Start entire production environment (⚠ use rarely)"
-	@echo "  prod-down      - Stop entire production environment (⚠ dangerous in prod)"
-	@echo "  prod-build     - Rebuild entire production image (⚠ rarely needed in prod)"
-	@echo "  prod-logs      - View production logs"
-	@echo "  prod-shell     - Open shell in production container"
-	@echo "  deploy-webapp  - 🔁 Rebuild + restart just the webapp service (safe for prod CI/CD)"
-	@echo "  ps             - List running containers"
-	@echo "  clean          - Dangerously clean everything (⚠ use with care)"
-	@echo "  help           - Show this help message"
+	@echo "  dev-up          - Start development environment"
+	@echo "  dev-down        - Stop development environment"
+	@echo "  dev-build       - Build development images"
+	@echo "  dev-logs        - View development logs"
+	@echo "  dev-shell       - Open shell in development container"
+	@echo "  prod-up         - Start entire production environment (⚠ use rarely)"
+	@echo "  prod-down       - Stop entire production environment (⚠ dangerous in prod)"
+	@echo "  prod-build      - Rebuild entire production image (⚠ rarely needed in prod)"
+	@echo "  prod-logs       - View production logs"
+	@echo "  prod-shell      - Open shell in production container"
+	@echo "  restart-gateway - 🔁 Restart just the Caddy gateway (safe for prod CI/CD)"
+	@echo "  deploy-webapp   - 🔁 Rebuild + restart just the webapp service (safe for prod CI/CD)"
+	@echo "  ps              - List running containers"
+	@echo "  clean           - Dangerously clean everything (⚠ use with care)"
+	@echo "  help            - Show this help message"
