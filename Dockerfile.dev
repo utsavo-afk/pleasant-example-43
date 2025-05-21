@@ -14,5 +14,8 @@ RUN \
 
 COPY . .
 
+ARG API_BASE_URL
+ENV API_BASE_URL=${API_BASE_URL}
+
 CMD ["sh", "-c", "if [ -f yarn.lock ]; then yarn dev; elif [ -f package-lock.json ]; then npm run dev; elif [ -f pnpm-lock.yaml ]; then pnpm dev; fi"]
 

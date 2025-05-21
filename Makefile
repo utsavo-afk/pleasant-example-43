@@ -5,13 +5,15 @@
 # Configurable variables
 COMPOSE_DEV=docker-compose.development.yaml
 COMPOSE_PROD=docker-compose.production.yaml
+API_BASE_URL ?= http://caddy:80/api
 
 ## ---------- Development ---------- ##
 
 dev-up:
 	@echo "Starting development environment..."
-	@echo "Building development images..."
-	docker compose -f $(COMPOSE_DEV) up --build
+	@echo "Using API_BASE_URL=$(API_BASE_URL)"
+	docker compose -f $(COMPOSE_DEV) build --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_DEV) up
 	@echo "Development environment started successfully."
 
 dev-down:
@@ -22,7 +24,7 @@ dev-down:
 
 dev-build:
 	@echo "Building development images..."
-	docker compose -f $(COMPOSE_DEV) build
+	docker compose -f $(COMPOSE_DEV) build --build-arg API_BASE_URL=$(API_BASE_URL)
 	@echo "Development images built successfully."
 	@echo "To start the development environment, run 'make dev-up'."
 
@@ -32,19 +34,18 @@ dev-logs:
 	@echo "To open a shell in the web container, run 'make dev-shell'."
 	docker compose -f $(COMPOSE_DEV) logs -f
 
-
 dev-shell:
 	@echo "Opening shell in development web container..."
 	@echo "To stop the shell, type 'exit'."
 	docker compose -f $(COMPOSE_DEV) exec web sh
-	
 
 ## ---------- Production ---------- ##
 
 prod-up:
 	@echo "Starting production environment..."
-	@echo "Building production images..."
-	docker compose -f $(COMPOSE_PROD) up --build -d
+	@echo "Using API_BASE_URL=$(API_BASE_URL)"
+	docker compose -f $(COMPOSE_PROD) build --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_PROD) up -d
 	@echo "Production environment started successfully."
 	@echo "To view logs, run 'make prod-logs'."
 	@echo "To open a shell in the web container, run 'make prod-shell'."
@@ -56,7 +57,8 @@ prod-down:
 
 prod-build:
 	@echo "Building production images..."
-	docker compose -f $(COMPOSE_PROD) build --no-cache
+	@echo "Using API_BASE_URL=$(API_BASE_URL)"
+	docker compose -f $(COMPOSE_PROD) build --no-cache --build-arg API_BASE_URL=$(API_BASE_URL)
 	@echo "Production images built successfully."
 	@echo "To start the production environment, run 'make prod-up'."
 
@@ -66,13 +68,11 @@ prod-logs:
 	@echo "To open a shell in the web container, run 'make prod-shell'."
 	docker compose -f $(COMPOSE_PROD) logs -f
 
-
 prod-shell:
 	@echo "Opening shell in production web container..."
 	@echo "To stop the shell, type 'exit'."
 	@echo "To view logs, run 'make prod-logs'."
 	docker compose -f $(COMPOSE_PROD) exec web sh
-
 
 ## ---------- Utility ---------- ##
 
@@ -84,7 +84,6 @@ clean:
 	docker compose -f $(COMPOSE_DEV) down -v --remove-orphans
 	docker compose -f $(COMPOSE_PROD) down -v --remove-orphans
 	docker system prune -f
-
 
 help:
 	@echo "Makefile commands:"

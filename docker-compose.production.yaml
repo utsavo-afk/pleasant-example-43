@@ -16,5 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.prod
+      args:
+        API_BASE_URL: ${API_BASE_URL}
     env_file:
       - .env.production
