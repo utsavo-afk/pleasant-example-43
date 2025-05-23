@@ -1,20 +1,29 @@
+BASH := $(shell which bash)
+
 .PHONY: dev-up dev-down dev-build dev-logs dev-shell \
 		prod-up prod-down prod-build prod-logs prod-shell \
 		deploy-webapp \
 		restart-gateway restart-prod-services \
+		certs-dev certs-prod \
 		ps clean help remind-me
 
 # Configurable variables
-COMPOSE_DEV=docker-compose.development.yaml
-COMPOSE_PROD=docker-compose.production.yaml
-API_BASE_URL ?= http://caddy:80/api
+export COMPOSE_DEV=docker-compose.development.yaml
+export COMPOSE_PROD=docker-compose.production.yaml
+export API_BASE_URL ?= http://caddy:80/api
+export TARGETS=postgres
 
 ## ---------- Development ---------- ##
+webapp-up:
+	@echo "🚀 Building webapp with API_BASE_URL=$(API_BASE_URL)"
+	docker compose -f docker-compose.development.yaml build \
+		--build-arg API_BASE_URL="$(API_BASE_URL)" webapp
+	docker compose -f docker-compose.development.yaml up webapp -d
 
 dev-up:
 	@echo "Starting development environment..."
 	@echo "Using API_BASE_URL=$(API_BASE_URL)"
-	docker compose -f $(COMPOSE_DEV) build --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_DEV) build --build-arg API_BASE_URL="$(API_BASE_URL)"
 	docker compose -f $(COMPOSE_DEV) up
 	@echo "Development environment started successfully."
 
@@ -26,7 +35,7 @@ dev-down:
 
 dev-build:
 	@echo "Building development images..."
-	docker compose -f $(COMPOSE_DEV) build --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_DEV) build --build-arg API_BASE_URL="$(API_BASE_URL)"
 	@echo "Development images built successfully."
 	@echo "To start the development environment, run 'make dev-up'."
 
@@ -41,12 +50,18 @@ dev-shell:
 	@echo "To stop the shell, type 'exit'."
 	docker compose -f $(COMPOSE_DEV) exec webapp sh
 
+certs-dev:
+	@echo "🔑 Generating development SSL certificates"
+	@echo "targets: $(TARGETS)"
+	$(BASH) ./scripts/generate_certs.sh --env=dev --targets=$(TARGETS)
+	@echo "✅ Development certificates generated successfully."
+
 ## ---------- Production ---------- ##
 
 prod-up:
 	@echo "Starting production environment..."
 	@echo "Using API_BASE_URL=$(API_BASE_URL)"
-	docker compose -f $(COMPOSE_PROD) build --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_PROD) build --build-arg API_BASE_URL="$(API_BASE_URL)"
 	docker compose -f $(COMPOSE_PROD) up -d
 	@echo "Production environment started successfully."
 	@echo "To view logs, run 'make prod-logs'."
@@ -62,7 +77,7 @@ prod-down:
 prod-build:
 	@echo "Building production images (no cache)..."
 	@echo "Using API_BASE_URL=$(API_BASE_URL)"
-	docker compose -f $(COMPOSE_PROD) build --no-cache --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_PROD) build --no-cache --build-arg API_BASE_URL="$(API_BASE_URL)"
 	@echo "Production images built successfully."
 	@echo "To start the production environment, run 'make prod-up'."
 
@@ -78,6 +93,12 @@ prod-shell:
 	@echo "To view logs, run 'make prod-logs'."
 	docker compose -f $(COMPOSE_PROD) exec webapp sh
 
+certs-prod:
+	@echo "🔑 Generating production SSL certificates"
+	@echo "targets: $(TARGETS)"
+	$(BASH) ./scripts/generate_certs.sh --env=prod --targets=$(TARGETS)
+	@echo "✅ Production certificates generated successfully."
+
 restart-gateway:
 	@echo "🔁 Restarting Caddy gateway..."
 	docker compose -f $(COMPOSE_PROD) restart caddy
@@ -86,7 +107,7 @@ restart-gateway:
 # ✅ CI/CD-safe deployment: rebuild only webapp and restart it
 deploy-webapp: check-prod-dependencies
 	@echo "🔁 Rebuilding and restarting only the webapp service..."
-	docker compose -f $(COMPOSE_PROD) build webapp --build-arg API_BASE_URL=$(API_BASE_URL)
+	docker compose -f $(COMPOSE_PROD) build webapp --build-arg API_BASE_URL="$(API_BASE_URL)"
 	@echo "🧹 Cleaning up old Docker images..."
 	docker image prune -f --filter "until=24h"
 	docker compose -f $(COMPOSE_PROD) up -d webapp
@@ -102,7 +123,7 @@ restart-prod-services:
 # Internal utility to ensure all required services are running before deploying webapp
 check-prod-dependencies:
 	@echo "🔍 Checking if required services are up (db, caddy)..."
-	# @if ! docker compose -f $(COMPOSE_PROD) ps db | grep -q "Up"; then \
+	# @if ! docker compose -f $(COMPOSE_PROD) ps postgres | grep -q "Up"; then \
 	# 	echo "❌ ERROR: 'db' service is not running. Start it before deploying."; \
 	# 	exit 1; \
 	# fi
@@ -117,23 +138,27 @@ ps:
 
 # WARNING! You will most likely not need to run this in your prod env
 clean:
-	@echo "Cleaning up all containers and volumes..."
+	@echo "Cleaning up all containers, networks and volumes..."
 	docker compose -f $(COMPOSE_DEV) down -v --remove-orphans
 	docker compose -f $(COMPOSE_PROD) down -v --remove-orphans
 	docker system prune -f
+	docker volume prune -f
 
 help:
 	@echo "Makefile commands:"
+	@echo "  webapp-up             - Build and start webapp with API_BASE_URL"
 	@echo "  dev-up                - Start development environment"
 	@echo "  dev-down              - Stop development environment"
 	@echo "  dev-build             - Build development images"
 	@echo "  dev-logs              - View development logs"
 	@echo "  dev-shell             - Open shell in development container"
+	@echo "  certs-dev             - Generate development SSL certificates"
 	@echo "  prod-up               - Start entire production environment (⚠️ use rarely)"
 	@echo "  prod-down             - Stop entire production environment (⚠️ dangerous in prod)"
 	@echo "  prod-build            - Rebuild entire production image (⚠️ rarely needed in prod)"
 	@echo "  prod-logs             - View production logs"
 	@echo "  prod-shell            - Open shell in production container"
+	@echo "  certs-prod            - Generate production SSL certificates"
 	@echo "  restart-gateway       - 🔁 Restart just the Caddy gateway (safe for prod CI/CD)"
 	@echo "  deploy-webapp         - 🔁 Rebuild + restart just the webapp service (safe for prod CI/CD)"
 	@echo "  restart-prod-services - ♻️ Restart all production services without removing containers"
@@ -146,11 +171,13 @@ remind-me:
 	@echo "🧠 REMINDER: When to use each Make command"
 	@echo ""
 	@echo "# === DEV ==="
+	@echo "  webapp-up      - Build and start webapp with API_BASE_URL"
 	@echo "  dev-up         - Start dev env (UI + API)"
 	@echo "  dev-down       - Stop dev env"
 	@echo "  dev-build      - Build dev images after changes"
 	@echo "  dev-logs       - View live dev logs"
 	@echo "  dev-shell      - Shell into dev webapp"
+	@echo "  certs-dev      - Generate dev SSL certs"
 	@echo ""
 	@echo "# === PROD ⚠️ Use with care ==="
 	@echo "  prod-up        - [⚠️ RARE] Start full prod stack"
@@ -158,6 +185,7 @@ remind-me:
 	@echo "  prod-build     - [⚠️ RARE] Force full rebuild"
 	@echo "  prod-logs      - View prod logs"
 	@echo "  prod-shell     - Shell into prod webapp"
+	@echo "  certs-prod     - Generate prod SSL certs"
 	@echo ""
 	@echo "# === CI/CD SAFE ✅ ==="
 	@echo "  deploy-webapp  - Rebuild + restart webapp only"
